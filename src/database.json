@@ -50,5 +50,12 @@
     "vote": []
   },
   "sticker": {},
-  "anonymous": {}
+  "anonymous": {
+    "1675850083086": {
+      "id": 1675850083086,
+      "a": "6285736800927@s.whatsapp.net",
+      "b": "",
+      "state": "WAITING"
+    }
+  }
 }

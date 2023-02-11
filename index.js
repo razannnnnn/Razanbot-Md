@@ -5,7 +5,7 @@
 */
 
 require('./config')
-const { default: razanConnect, useSingleFileAuthState, DisconnectReason, fetchLatestBaileysVersion, generateForwardMessageContent, prepareWAMessageMedia, generateWAMessageFromContent, generateMessageID, downloadContentFromMessage, makeInMemoryStore, jidDecode, proto } = require("@adiwajshing/baileys")
+const { default: razanConnect, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, generateForwardMessageContent, prepareWAMessageMedia, generateWAMessageFromContent, generateMessageID, downloadContentFromMessage, makeInMemoryStore, jidDecode, proto } = require("@adiwajshing/baileys")
 const pino = require('pino')
 const { Boom } = require('@hapi/boom')
 const fs = require('fs')
@@ -68,12 +68,12 @@ if (global.db) setInterval(async () => {
   }, 30 * 1000)
 
 async function startrazan() {
-    const { state, saveCreds } = await useSingleFileAuthState(`./sesi/${sessionName}.json`)
+    const { state, saveCreds } = await useMultiFileAuthState(`./${sessionName}`)
 
     const razan = razanConnect({
         logger: pino({ level: 'silent' }),
         printQRInTerminal: true,
-        browser: ['Razanbot - MD'],
+        browser: ['Razanbot - MD', 'Safari', '1.0.0'],
         patchMessageBeforeSending: (message) => {
 
                 const requiresPatch = !!(

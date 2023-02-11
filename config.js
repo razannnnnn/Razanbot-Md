@@ -24,10 +24,12 @@ global.apikey = {
 
 // Other
 global.owner = ["6285736800927"];
+global.ownername = "Razan";
+global.footer = "© Razan";
 global.premium = ["6285736800927"];
 global.packname = "Razanbot - MD";
 global.author = "WhatsApp Bot";
-global.sessionName = "hisoka";
+global.sessionName = "razan";
 global.prefa = ["", "!", ".", "🐦", "🐤", "🗿"];
 global.sp = "あ";
 global.mess = {
@@ -45,7 +47,7 @@ global.limitawal = {
   premium: "Infinity",
   free: 100,
 };
-global.thumb = fs.readFileSync("./lib/hisoka.jpg");
+global.thumb = { url: "https://telegra.ph/file/3b03a2eecca3a9579987e.jpg" };
 global.visoka = { url: "https://telegra.ph/file/15209657f9d4f59c7ca1e.mp4" };
 
 let file = require.resolve(__filename);

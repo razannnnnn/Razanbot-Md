@@ -25,6 +25,8 @@ const path = require("path");
 const os = require("os");
 const moment = require("moment-timezone");
 const { JSDOM } = require("jsdom");
+const Jimp = require("jimp");
+const { Configuration, OpenAIApi } = require("openai");
 const speed = require("performance-now");
 const { performance } = require("perf_hooks");
 const { Primbon } = require("scrape-primbon");
@@ -47,6 +49,7 @@ const {
   getRandom,
   getGroupAdmins,
 } = require("./lib/myfunc");
+const setting = require("./apikey.json");
 
 // read database
 let tebaklagu = (db.data.game.tebaklagu = []);
@@ -97,6 +100,7 @@ module.exports = razan = async (razan, m, chatUpdate, store) => {
       .shift()
       .toLowerCase();
     const args = body.trim().split(/ +/).slice(1);
+    const from = m.chat;
     const pushname = m.pushName || "No Name";
     const botNumber = await razan.decodeJid(razan.user.id);
     const isCreator = [botNumber, ...global.owner]
@@ -227,6 +231,16 @@ module.exports = razan = async (razan, m, chatUpdate, store) => {
         timezone: "Asia/Jakarta",
       }
     );
+
+    const reSize = async (buffer, ukur1, ukur2) => {
+      return new Promise(async (resolve, reject) => {
+        var baper = await Jimp.read(buffer);
+        var ab = await baper
+          .resize(ukur1, ukur2)
+          .getBufferAsync(Jimp.MIME_JPEG);
+        resolve(ab);
+      });
+    };
 
     // auto set bio
     if (db.data.settings[botNumber].autobio) {
@@ -2439,9 +2453,9 @@ ${vote[m.chat][2].map((v, i) => `├ ${i + 1}. @${v.split`@`[0]}`).join("\n")}
           if (!text) throw `Example : ${prefix + command} text`;
           await razan.sendMedia(
             m.chat,
-            `https://xteam.xyz/${command}?file&text=${text}`,
+            `https://api.razan.my.id/api/maker/${command}?text=${text}&apikey=Razan123`,
             "razan",
-            "morou",
+            "bot-md",
             m,
             { asSticker: true }
           );
@@ -4775,6 +4789,153 @@ Lihat list Pesan Dengan ${prefix}listmsg`);
           m.reply("Sukses Change To Self Usage");
         }
         break;
+      case "menfes":
+      case "menfess":
+      case "confess":
+      case "confes":
+        {
+          if (m.isGroup) throw "Fitur Tidak Dapat Digunakan Di Group";
+          if (!text)
+            throw `Example : ${
+              prefix + command
+            } 6282xxxxx, nama samaran, pesan`;
+          var mon = args.join(" ");
+          var m1 = mon.split(",")[0] ? q.split(",")[0] : q;
+          var m2 = mon.split(",")[1] ? q.split(",")[1] : q;
+          var m3 = mon.split(",")[2] ? q.split(",")[2] : "";
+          let kafloc = {
+            key: {
+              participant: "0@s.whatsapp.net",
+              ...(m.chat ? { remoteJid: `status@broadcast` } : {}),
+            },
+            message: {
+              locationMessage: {
+                name: `${global.ownername}`,
+                jpegThumbnail: thumb,
+              },
+            },
+          };
+          let mq1 = m1 + "@s.whatsapp.net";
+          let kawk = "PESAN RAHASIA";
+          let ownernomer = global.owner;
+          let ownernya = ownernomer + "@s.whatsapp.net";
+          let me = m.sender;
+          let ments = [mq1, ownernya, me];
+          let pjtxt = `Dari : ${m2} \nUntuk : @${
+            mq1.split("@")[0]
+          }\n\nIsi Pesan : ${m3}`;
+          let buttons = [
+            {
+              buttonId: `menfesconfirm ${m.sender}`,
+              buttonText: { displayText: "✔️CONFIRM" },
+              type: 1,
+            },
+          ];
+          let buttons2 = [
+            {
+              buttonId: `heheh`,
+              buttonText: { displayText: "❤️LIKE" },
+              type: 1,
+            },
+          ];
+          await razan.sendButtonText(
+            m1 + "@s.whatsapp.net",
+            buttons,
+            pjtxt,
+            kawk,
+            m,
+            { mentions: ments, quoted: kafloc }
+          );
+          let akhji = `Pesan Telah Terkirim\nKe @${mq1.split("@")[0]}`;
+
+          await razan.sendButtonText(
+            m.chat,
+            buttons2,
+            akhji,
+            global.footer,
+            m,
+            {
+              mentions: ments,
+            }
+          );
+        }
+        break;
+      case "menfesconfirm":
+        razan.sendMessage(q, {
+          text: `Sudah Di Confirmasi Nih Menfess nyaa🤭`,
+        });
+        m.reply(`Terimakasih Menfess Telah Diterima.`);
+        break;
+      case "ai":
+      case "openai":
+        try {
+          if (setting.keyopenai === "ISI_APIKEY_OPENAI_DISINI")
+            return reply(
+              "Apikey belum diisi\n\nSilahkan isi terlebih dahulu apikeynya di file key.json\n\nApikeynya bisa dibuat di website: https://beta.openai.com/account/api-keys"
+            );
+          if (!text)
+            return reply(`Example: ${prefix}${command} Apa itu resesi`);
+          const configuration = new Configuration({
+            apiKey: setting.keyopenai,
+          });
+          const openai = new OpenAIApi(configuration);
+
+          const response = await openai.createCompletion({
+            model: "text-davinci-003",
+            prompt: text,
+            temperature: 0.3,
+            max_tokens: 2000,
+            top_p: 1.0,
+            frequency_penalty: 0.0,
+            presence_penalty: 0.0,
+          });
+          m.reply(`${response.data.choices[0].text}`);
+        } catch (error) {
+          if (error.response) {
+            console.log(error.response.status);
+            console.log(error.response.data);
+            console.log(`${error.response.status}\n\n${error.response.data}`);
+          } else {
+            console.log(error);
+            m.reply("Maaf, sepertinya ada yang error :" + error.message);
+          }
+        }
+        break;
+      case "img":
+      case "ai-img":
+      case "image":
+      case "images":
+        try {
+          if (setting.keyopenai === "ISI_APIKEY_OPENAI_DISINI")
+            return reply(
+              "Apikey belum diisi\n\nSilahkan isi terlebih dahulu apikeynya di file key.json\n\nApikeynya bisa dibuat di website: https://beta.openai.com/account/api-keys"
+            );
+          if (!text)
+            return reply(
+              `Membuat gambar dari AI.\n\nContoh:\n${prefix}${command} Wooden house on snow mountain`
+            );
+          const configuration = new Configuration({
+            apiKey: setting.keyopenai,
+          });
+          const openai = new OpenAIApi(configuration);
+          const response = await openai.createImage({
+            prompt: text,
+            n: 1,
+            size: "512x512",
+          });
+          //console.log(response.data.data[0].url)
+          razan.sendImage(from, response.data.data[0].url, text, mek);
+        } catch (error) {
+          if (error.response) {
+            console.log(error.response.status);
+            console.log(error.response.data);
+            console.log(`${error.response.status}\n\n${error.response.data}`);
+          } else {
+            console.log(error);
+            m.reply("Maaf, sepertinya ada yang error :" + error.message);
+          }
+        }
+        break;
       case "ping":
       case "botstatus":
       case "statusbot":
@@ -5135,332 +5296,255 @@ ${cpus
           }
         }
         break;
+
+      //────────────────────[ MAIN MENU ]────────────────────
+
       case "list":
       case "menu":
       case "help":
       case "?":
         {
-          anu = `┌──⭓ *Group Menu*
+          buffer = await getBuffer(
+            `https://telegra.ph/file/21d95e69f7ef9c30979a5.jpg`
+          );
+          anu = `
+╭─────  ⌈ *GROUP* ⌋
+│   ⟥  ${prefix}linkgroup
+│   ⟥  ${prefix}ephemeral [option]
+│   ⟥  ${prefix}setppgc [image]
+│   ⟥  ${prefix}setname [text]
+│   ⟥  ${prefix}setdesc [text]
+│   ⟥  ${prefix}group [option]
+│   ⟥  ${prefix}editinfo [option]
+│   ⟥  ${prefix}add @user
+│   ⟥  ${prefix}kick @user
+│   ⟥  ${prefix}hidetag [text]
+│   ⟥  ${prefix}tagall [text]
+│   ⟥  ${prefix}antilink [on/off]
+│   ⟥  ${prefix}mute [on/off]
+│   ⟥  ${prefix}promote @user
+│   ⟥  ${prefix}demote @user
+│   ⟥  ${prefix}vote [text]
+│   ⟥  ${prefix}devote
+│   ⟥  ${prefix}upvote
+│   ⟥  ${prefix}cekvote
+│   ⟥  ${prefix}hapusvote
+│   
+├─────  ⌈ *DOWNLOADER* ⌋
+│   ⟥  ${prefix}tiktokmp4 [url]
+│   ⟥  ${prefix}tiktokmp3 [url]
+│   ⟥  ${prefix}instagram [url]
+│   ⟥  ${prefix}twittermp4 [url]
+│   ⟥  ${prefix}twittermp3 [url]
+│   ⟥  ${prefix}facebook [url]
+│   ⟥  ${prefix}pinterestdl [url]
+│   ⟥  ${prefix}ytmp3 [url]
+│   ⟥  ${prefix}ytmp4 [url]
+│   ⟥  ${prefix}getmusic [query]
+│   ⟥  ${prefix}getvideo [query]
+│   ⟥  ${prefix}umma [url]
+│   ⟥  ${prefix}joox [query]
+│   ⟥  ${prefix}soundcloud [url]
+│   
+├─────  ⌈ *SEARCHING* ⌋ 
+│   ⟥  ${prefix}play [query]
+│   ⟥  ${prefix}yts [query]
+│   ⟥  ${prefix}google [query]
+│   ⟥  ${prefix}gimage [query]
+│   ⟥  ${prefix}pinterest [query]
+│   ⟥  ${prefix}wallpaper [query]
+│   ⟥  ${prefix}wikimedia [query]
+│   ⟥  ${prefix}ytsearch [query]
+│   ⟥  ${prefix}ringtone [query]
+│   ⟥  ${prefix}stalk [option] [query]
+│   
+├─────  ⌈ *RANDOM* ⌋
+│   ⟥  ${prefix}coffe
+│   ⟥  ${prefix}quotesanime
+│   ⟥  ${prefix}motivasi
+│   ⟥  ${prefix}dilanquote
+│   ⟥  ${prefix}bucinquote
+│   ⟥  ${prefix}katasenja
+│   ⟥  ${prefix}puisi
+│   ⟥  ${prefix}couple
+│   ⟥  ${prefix}anime
+│   ⟥  ${prefix}waifu
+│   ⟥  ${prefix}husbu
+│   ⟥  ${prefix}neko
+│   ⟥  ${prefix}shinobu
+│   
+├─────  ⌈ *TEXTPRO* ⌋ 
+│   ⟥  ${prefix}3dchristma
+│   ⟥  ${prefix}3ddeepsea
+│   ⟥  ${prefix}americanflag
+│   ⟥  ${prefix}3dscifi
+│   ⟥  ${prefix}3drainbow
+│   ⟥  ${prefix}3dwaterpipe
+│   ⟥  ${prefix}halloweenskeleton
+│   ⟥  ${prefix}sketch
+│   ⟥  ${prefix}bluecircuit
+│   ⟥  ${prefix}space
+│   ⟥  ${prefix}metallic
+│   ⟥  ${prefix}fiction
+│   ⟥  ${prefix}greenhorror
+│   ⟥  ${prefix}transformer
+│   ⟥  ${prefix}berry
+│   ⟥  ${prefix}thunder
+│   ⟥  ${prefix}magma
+│   ⟥  ${prefix}3dcrackedstone
+│   ⟥  ${prefix}3dneonlight
+│   ⟥  ${prefix}impressiveglitch
+│   ⟥  ${prefix}naturalleaves
+│   ⟥  ${prefix}fireworksparkle
+│   ⟥  ${prefix}matrix
+│   ⟥  ${prefix}dropwater
+│   ⟥  ${prefix}harrypotter
+│   ⟥  ${prefix}foggywindow
+│   ⟥  ${prefix}neondevils
+│   ⟥  ${prefix}christmasholiday
+│   ⟥  ${prefix}3dgradient
+│   ⟥  ${prefix}blackpink
+│   ⟥  ${prefix}gluetext
+│   
+├─────  ⌈ *FUN* ⌋ 
+│   ⟥  ${prefix}halah
+│   ⟥  ${prefix}hilih
+│   ⟥  ${prefix}huluh
+│   ⟥  ${prefix}heleh
+│   ⟥  ${prefix}holoh
+│   ⟥  ${prefix}truth
+│   ⟥  ${prefix}dare
+│   ⟥  ${prefix}jadian
+│   ⟥  ${prefix}jodohku
+│   ⟥  ${prefix}delttt
+│   ⟥  ${prefix}tictactoe
+│   ⟥  ${prefix}family100
+│   ⟥  ${prefix}tebak [option]
+│   ⟥  ${prefix}math [mode]
+│   ⟥  ${prefix}suitpvp [@tag]
+│   
+├─────  ⌈ *PRIMBON* ⌋ 
+│   ⟥  ${prefix}nomorhoki
+│   ⟥  ${prefix}artimimpi
+│   ⟥  ${prefix}artinama
+│   ⟥  ${prefix}ramaljodoh
+│   ⟥  ${prefix}ramaljodohbali
+│   ⟥  ${prefix}suamiistri
+│   ⟥  ${prefix}ramalcinta
+│   ⟥  ${prefix}cocoknama
+│   ⟥  ${prefix}pasangan
+│   ⟥  ${prefix}jadiannikah
+│   ⟥  ${prefix}sifatusaha
+│   ⟥  ${prefix}rezeki
+│   ⟥  ${prefix}pekerjaan
+│   ⟥  ${prefix}nasib
+│   ⟥  ${prefix}penyakit
+│   ⟥  ${prefix}tarot
+│   ⟥  ${prefix}fengshui
+│   ⟥  ${prefix}haribaik
+│   ⟥  ${prefix}harisangar
+│   ⟥  ${prefix}harisial
+│   ⟥  ${prefix}nagahari
+│   ⟥  ${prefix}arahrezeki
+│   ⟥  ${prefix}peruntungan
+│   ⟥  ${prefix}weton
+│   ⟥  ${prefix}karakter
+│   ⟥  ${prefix}keberuntungan
+│   ⟥  ${prefix}memancing
+│   ⟥  ${prefix}masasubur
+│   ⟥  ${prefix}zodiak
+│   ⟥  ${prefix}shio
+│   
+├─────  ⌈ *CONVERTER* ⌋ 
+│   ⟥  ${prefix}toimage
+│   ⟥  ${prefix}removebg
+│   ⟥  ${prefix}sticker / ${prefix}stiker / ${prefix}s
+│   ⟥  ${prefix}emojimix
+│   ⟥  ${prefix}tovideo
+│   ⟥  ${prefix}togif
+│   ⟥  ${prefix}tourl
+│   ⟥  ${prefix}tovn
+│   ⟥  ${prefix}tomp3
+│   ⟥  ${prefix}toaudio
+│   ⟥  ${prefix}ebinary
+│   ⟥  ${prefix}dbinary
+│   ⟥  ${prefix}styletext
+│   ⟥  ${prefix}attp [text]
+│   ⟥  ${prefix}ttp [text]
+│   
+├─────  ⌈ *MAIN* ⌋ 
+│   ⟥  ${prefix}ping
+│   ⟥  ${prefix}speed
+│   ⟥  ${prefix}runtime
+│   ⟥  ${prefix}owner
+│   ⟥  ${prefix}menu / ${prefix}help / ${prefix}info
+│   ⟥  ${prefix}delete
+│   ⟥  ${prefix}infochat
+│   ⟥  ${prefix}quoted
+│   ⟥  ${prefix}listpc
+│   ⟥  ${prefix}listgc
+│   ⟥  ${prefix}listonline
+│   ⟥  ${prefix}speedtest
+│   
+├─────  ⌈ *DATABASE* ⌋ 
+│   ⟥  ${prefix}setcmd
+│   ⟥  ${prefix}listcmd
+│   ⟥  ${prefix}delcmd
+│   ⟥  ${prefix}lockcmd
+│   ⟥  ${prefix}addmsg
+│   ⟥  ${prefix}listmsg
+│   ⟥  ${prefix}getmsg
+│   ⟥  ${prefix}delmsg
+│   
+├─────  ⌈ *ANONYMOUS CHAT* ⌋ 
+│   ⟥  ${prefix}anonymous
+│   ⟥  ${prefix}start
+│   ⟥  ${prefix}next
+│   ⟥  ${prefix}keluar
+│   ⟥  ${prefix}sendkontak
+│   ⟥  ${prefix}menfess / ${prefix}confess
+│   
+├─────  ⌈ *ISLAM* ⌋ 
+│   ⟥  ${prefix}iqra
+│   ⟥  ${prefix}hadist
+│   ⟥  ${prefix}alquran
+│   ⟥  ${prefix}juzamma
+│   ⟥  ${prefix}tafsirsurah
+│   
+├─────  ⌈ *VOICE CHANGER* ⌋ 
+│   ⟥  ${prefix}bass
+│   ⟥  ${prefix}blown
+│   ⟥  ${prefix}deep
+│   ⟥  ${prefix}earrape
+│   ⟥  ${prefix}fast
+│   ⟥  ${prefix}fat
+│   ⟥  ${prefix}nightcore
+│   ⟥  ${prefix}reverse
+│   ⟥  ${prefix}robot
+│   ⟥  ${prefix}slow
+│   ⟥  ${prefix}tupai
 │
-│⭔ ${prefix}linkgroup
-│⭔ ${prefix}ephemeral [option]
-│⭔ ${prefix}setppgc [image]
-│⭔ ${prefix}setname [text]
-│⭔ ${prefix}setdesc [text]
-│⭔ ${prefix}group [option]
-│⭔ ${prefix}editinfo [option]
-│⭔ ${prefix}add @user
-│⭔ ${prefix}kick @user
-│⭔ ${prefix}hidetag [text]
-│⭔ ${prefix}tagall [text]
-│⭔ ${prefix}totag [reply]
-│⭔ ${prefix}antilink [on/off]
-│⭔ ${prefix}mute [on/off]
-│⭔ ${prefix}promote @user
-│⭔ ${prefix}demote @user
-│⭔ ${prefix}vote [text]
-│⭔ ${prefix}devote
-│⭔ ${prefix}upvote
-│⭔ ${prefix}cekvote
-│⭔ ${prefix}hapusvote
+├─────  ⌈ *TOOLS* ⌋ 
+│   ⟥  ${prefix}base64enc [text]
+│   ⟥  ${prefix}base64dec [binary]
+│   ⟥  ${prefix}ssweb [url]
+│   ⟥  ${prefix}qrcode [text]
 │
-└───────⭓
-
-┌──⭓ *Webzone Menu*
-│
-│⭔ ${prefix}playstore
-│⭔ ${prefix}gsmarena
-│⭔ ${prefix}jadwalbioskop
-│⭔ ${prefix}nowplayingbioskop
-│⭔ ${prefix}aminio
-│⭔ ${prefix}wattpad
-│⭔ ${prefix}webtoons
-│⭔ ${prefix}drakor
-│
-└───────⭓
-
-
-┌──⭓ *Downloader Menu*
-│
-│⭔ ${prefix}tiktoknowm [url]
-│⭔ ${prefix}tiktokwm [url]
-│⭔ ${prefix}tiktokmp3 [url]
-│⭔ ${prefix}instagram [url]
-│⭔ ${prefix}twitter [url]
-│⭔ ${prefix}twittermp3 [url]
-│⭔ ${prefix}facebook [url]
-│⭔ ${prefix}pinterestdl [url]
-│⭔ ${prefix}ytmp3 [url]
-│⭔ ${prefix}ytmp4 [url]
-│⭔ ${prefix}getmusic [query]
-│⭔ ${prefix}getvideo [query]
-│⭔ ${prefix}umma [url]
-│⭔ ${prefix}joox [query]
-│⭔ ${prefix}soundcloud [url]
-│
-└───────⭓
-
-┌──⭓ *Search Menu*
-│
-│⭔ ${prefix}play [query]
-│⭔ ${prefix}yts [query]
-│⭔ ${prefix}google [query]
-│⭔ ${prefix}gimage [query]
-│⭔ ${prefix}pinterest [query]
-│⭔ ${prefix}wallpaper [query]
-│⭔ ${prefix}wikimedia [query]
-│⭔ ${prefix}ytsearch [query]
-│⭔ ${prefix}ringtone [query]
-│⭔ ${prefix}stalk [option] [query]
-│
-└───────⭓
-
-┌──⭓ *Random Menu*
-│
-│⭔ ${prefix}coffe
-│⭔ ${prefix}quotesanime
-│⭔ ${prefix}motivasi
-│⭔ ${prefix}dilanquote
-│⭔ ${prefix}bucinquote
-│⭔ ${prefix}katasenja
-│⭔ ${prefix}puisi
-│⭔ ${prefix}couple
-│⭔ ${prefix}anime
-│⭔ ${prefix}waifu
-│⭔ ${prefix}husbu
-│⭔ ${prefix}neko
-│⭔ ${prefix}shinobu
-│⭔ ${prefix}waifus (nsfw)
-│⭔ ${prefix}nekos (nsfw)
-│⭔ ${prefix}trap (nsfw)
-│⭔ ${prefix}blowjob (nsfw)
-│
-└───────⭓
-
-┌──⭓ *Text Pro Menu*
-│
-│⭔ ${prefix}3dchristmas
-│⭔ ${prefix}3ddeepsea
-│⭔ ${prefix}americanflag
-│⭔ ${prefix}3dscifi
-│⭔ ${prefix}3drainbow
-│⭔ ${prefix}3dwaterpipe
-│⭔ ${prefix}halloweenskeleton
-│⭔ ${prefix}sketch
-│⭔ ${prefix}bluecircuit
-│⭔ ${prefix}space
-│⭔ ${prefix}metallic
-│⭔ ${prefix}fiction
-│⭔ ${prefix}greenhorror
-│⭔ ${prefix}transformer
-│⭔ ${prefix}berry
-│⭔ ${prefix}thunder
-│⭔ ${prefix}magma
-│⭔ ${prefix}3dcrackedstone
-│⭔ ${prefix}3dneonlight
-│⭔ ${prefix}impressiveglitch
-│⭔ ${prefix}naturalleaves
-│⭔ ${prefix}fireworksparkle
-│⭔ ${prefix}matrix
-│⭔ ${prefix}dropwater
-│⭔ ${prefix}harrypotter
-│⭔ ${prefix}foggywindow
-│⭔ ${prefix}neondevils
-│⭔ ${prefix}christmasholiday
-│⭔ ${prefix}3dgradient
-│⭔ ${prefix}blackpink
-│⭔ ${prefix}gluetext
-│
-└───────⭓
-
-┌──⭓ *Photo Oxy Menu*
-│
-│⭔ ${prefix}shadow
-│⭔ ${prefix}romantic
-│⭔ ${prefix}smoke
-│⭔ ${prefix}burnpapper
-│⭔ ${prefix}naruto
-│⭔ ${prefix}lovemsg
-│⭔ ${prefix}grassmsg
-│⭔ ${prefix}lovetext
-│⭔ ${prefix}coffecup
-│⭔ ${prefix}butterfly
-│⭔ ${prefix}harrypotter
-│⭔ ${prefix}retrolol
-│
-└───────⭓
-
-┌──⭓ *Ephoto Menu*
-│
-│⭔ ${prefix}ffcover
-│⭔ ${prefix}crossfire
-│⭔ ${prefix}galaxy
-│⭔ ${prefix}glass
-│⭔ ${prefix}neon
-│⭔ ${prefix}beach
-│⭔ ${prefix}blackpink
-│⭔ ${prefix}igcertificate
-│⭔ ${prefix}ytcertificate
-│
-└───────⭓
-
-┌──⭓ *Fun Menu*
-│
-│⭔ ${prefix}simih
-│⭔ ${prefix}halah
-│⭔ ${prefix}hilih
-│⭔ ${prefix}huluh
-│⭔ ${prefix}heleh
-│⭔ ${prefix}holoh
-│⭔ ${prefix}jadian
-│⭔ ${prefix}jodohku
-│⭔ ${prefix}delttt
-│⭔ ${prefix}tictactoe
-│⭔ ${prefix}family100
-│⭔ ${prefix}tebak [option]
-│⭔ ${prefix}math [mode]
-│⭔ ${prefix}suitpvp [@tag]
-│
-└───────⭓
-
-┌──⭓ *Primbon Menu*
-│
-│⭔ ${prefix}nomorhoki
-│⭔ ${prefix}artimimpi
-│⭔ ${prefix}artinama
-│⭔ ${prefix}ramaljodoh
-│⭔ ${prefix}ramaljodohbali
-│⭔ ${prefix}suamiistri
-│⭔ ${prefix}ramalcinta
-│⭔ ${prefix}cocoknama
-│⭔ ${prefix}pasangan
-│⭔ ${prefix}jadiannikah
-│⭔ ${prefix}sifatusaha
-│⭔ ${prefix}rezeki
-│⭔ ${prefix}pekerjaan
-│⭔ ${prefix}nasib
-│⭔ ${prefix}penyakit
-│⭔ ${prefix}tarot
-│⭔ ${prefix}fengshui
-│⭔ ${prefix}haribaik
-│⭔ ${prefix}harisangar
-│⭔ ${prefix}harisial
-│⭔ ${prefix}nagahari
-│⭔ ${prefix}arahrezeki
-│⭔ ${prefix}peruntungan
-│⭔ ${prefix}weton
-│⭔ ${prefix}karakter
-│⭔ ${prefix}keberuntungan
-│⭔ ${prefix}memancing
-│⭔ ${prefix}masasubur
-│⭔ ${prefix}zodiak
-│⭔ ${prefix}shio
-│
-└───────⭓
-
-┌──⭓ *Convert Menu*
-│
-│⭔ ${prefix}attp
-│⭔ ${prefix}ttp
-│⭔ ${prefix}toimage
-│⭔ ${prefix}removebg
-│⭔ ${prefix}sticker
-│⭔ ${prefix}stickerwm
-│⭔ ${prefix}emojimix
-│⭔ ${prefix}emojimix2
-│⭔ ${prefix}tovideo
-│⭔ ${prefix}togif
-│⭔ ${prefix}tourl
-│⭔ ${prefix}tovn
-│⭔ ${prefix}tomp3
-│⭔ ${prefix}toaudio
-│⭔ ${prefix}ebinary
-│⭔ ${prefix}dbinary
-│⭔ ${prefix}styletext
-│⭔ ${prefix}smeme
-│
-└───────⭓
-
-┌──⭓ *Main Menu*
-│
-│⭔ ${prefix}ping
-│⭔ ${prefix}owner
-│⭔ ${prefix}menu / ${prefix}help / ${prefix}?
-│⭔ ${prefix}delete
-│⭔ ${prefix}infochat
-│⭔ ${prefix}quoted
-│⭔ ${prefix}listpc
-│⭔ ${prefix}listgc
-│⭔ ${prefix}listonline
-│⭔ ${prefix}speedtest
-│
-└───────⭓
-
-┌──⭓ *Database Menu*
-│
-│⭔ ${prefix}setcmd
-│⭔ ${prefix}listcmd
-│⭔ ${prefix}delcmd
-│⭔ ${prefix}lockcmd
-│⭔ ${prefix}addmsg
-│⭔ ${prefix}listmsg
-│⭔ ${prefix}getmsg
-│⭔ ${prefix}delmsg
-│
-└───────⭓
-
-┌──⭓ *Anonymous Menu*
-│
-│⭔ ${prefix}anonymous
-│⭔ ${prefix}start
-│⭔ ${prefix}next
-│⭔ ${prefix}keluar
-│
-└───────⭓
-
-┌──⭓ *Islamic Menu*
-│
-│⭔ ${prefix}iqra
-│⭔ ${prefix}hadist
-│⭔ ${prefix}alquran
-│⭔ ${prefix}tafsirsurah
-│
-└───────⭓
-
-┌──⭓ *Voice Changer*
-│
-│⭔ ${prefix}bass
-│⭔ ${prefix}blown
-│⭔ ${prefix}deep
-│⭔ ${prefix}earrape
-│⭔ ${prefix}fast
-│⭔ ${prefix}fat
-│⭔ ${prefix}nightcore
-│⭔ ${prefix}reverse
-│⭔ ${prefix}robot
-│⭔ ${prefix}slow
-│⭔ ${prefix}tupai
-│
-└───────⭓
-
-┌──⭓ *Owner Menu*
-│
-│⭔ ${prefix}react [emoji]
-│⭔ ${prefix}chat [option]
-│⭔ ${prefix}join [link]
-│⭔ ${prefix}leave
-│⭔ ${prefix}block @user
-│⭔ ${prefix}unblock @user
-│⭔ ${prefix}bcgroup [text]
-│⭔ ${prefix}bcall [text]
-│⭔ ${prefix}setppbot [image]
-│⭔ ${prefix}setexif
-│⭔ ${prefix}setmenu [option]
-│⭔ ${prefix}anticall [on/off]
-│⭔ ${prefix}setstatus
-│⭔ ${prefix}setnamebot
-│
-└───────⭓`;
+├─────  ⌈ *OWNER* ⌋ 
+│   ⟥  ${prefix}react [emoji]
+│   ⟥  ${prefix}chat [option]
+│   ⟥  ${prefix}join [link]
+│   ⟥  ${prefix}addprem @tag/nomer waktu
+│   ⟥  ${prefix}delprem @tag/nomer
+│   ⟥  ${prefix}leave
+│   ⟥  ${prefix}block @user
+│   ⟥  ${prefix}unblock @user
+│   ⟥  ${prefix}bcgroup [text]
+│   ⟥  ${prefix}bcall [text]
+│   ⟥  ${prefix}setppbot [image]
+│   ⟥  ${prefix}setexif
+╰──────────────────
+          `;
           let btn = [
             {
               urlButton: {
